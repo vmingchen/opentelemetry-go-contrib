@@ -28,6 +28,7 @@ import (
 )
 
 const CONFIG_SERVICE_ADDRESS = "localhost:50420"
+
 var DEFAULT_FINGERPRINT = []byte{'f', 'o', 'o'}
 
 // testLock is to prevent race conditions in test code

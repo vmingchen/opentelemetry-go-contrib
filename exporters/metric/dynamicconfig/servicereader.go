@@ -44,8 +44,8 @@ type ServiceReader struct {
 
 func newServiceReader(configHost string, resource *resourcepb.Resource) *ServiceReader {
 	return &ServiceReader{
-		configHost:   configHost,
-		resource:     resource,
+		configHost: configHost,
+		resource:   resource,
 	}
 }
 
@@ -70,7 +70,7 @@ func (r *ServiceReader) readConfig() (*Config, error) {
 
 	request := &pb.ConfigRequest{
 		LastKnownFingerprint: r.lastKnownFingerprint,
-		Resource:        r.resource,
+		Resource:             r.resource,
 	}
 
 	md := metadata.Pairs("timestamp", time.Now().Format(time.StampNano))
@@ -86,7 +86,7 @@ func (r *ServiceReader) readConfig() (*Config, error) {
 	r.suggestedWaitTimeSec = response.SuggestedWaitTimeSec
 
 	newConfig := Config{
-		Fingerprint: response.Fingerprint,
+		Fingerprint:  response.Fingerprint,
 		MetricConfig: response.MetricConfig,
 		TraceConfig:  response.TraceConfig,
 	}

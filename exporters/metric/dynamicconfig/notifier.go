@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/contrib/internal/transform"
-	
+
 	controllerTime "go.opentelemetry.io/otel/sdk/metric/controller/time"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
@@ -64,7 +64,7 @@ type Notifier struct {
 	// non-dynamic.
 	configHost string
 
-	// This protects the config and subscribed fields. Other fields should be 
+	// This protects the config and subscribed fields. Other fields should be
 	// read-only once set.
 	lock sync.Mutex
 

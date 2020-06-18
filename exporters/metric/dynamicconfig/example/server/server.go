@@ -23,7 +23,7 @@ import (
 	"google.golang.org/grpc"
 
 	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
-	
+
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 

@@ -39,7 +39,7 @@ type mockServer struct {
 func (s *mockServer) GetConfig(ctx context.Context, in *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	config := &pb.ConfigResponse{
 		MetricConfig: s.config.MetricConfig,
-		TraceConfig: s.config.TraceConfig,
+		TraceConfig:  s.config.TraceConfig,
 	}
 	return config, nil
 }
@@ -53,7 +53,7 @@ func runMockConfigService(t *testing.T, addr string, config *dynamicconfig.Confi
 	}
 
 	srv := grpc.NewServer()
-	pb.RegisterDynamicConfigServer(srv, &mockServer{ config: config })
+	pb.RegisterDynamicConfigServer(srv, &mockServer{config: config})
 
 	go func() {
 		_ = srv.Serve(ln)

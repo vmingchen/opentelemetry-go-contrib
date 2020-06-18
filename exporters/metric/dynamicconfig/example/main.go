@@ -42,7 +42,7 @@ func initProvider() (*otlp.Exporter, *push.Controller) {
 
 	notifier, err := dynamicconfig.NewNotifier(
 		dynamicconfig.GetDefaultConfig(10, []byte{'f', 'o', 'o'}),
-		dynamicconfig.WithCheckFrequency(10 * time.Second),
+		dynamicconfig.WithCheckFrequency(10*time.Second),
 		dynamicconfig.WithConfigHost("localhost:7777"),
 		dynamicconfig.WithResource(resource),
 	)

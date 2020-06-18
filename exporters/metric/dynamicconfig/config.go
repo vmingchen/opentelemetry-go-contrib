@@ -16,12 +16,12 @@ package dynamicconfig
 
 import (
 	"bytes"
-	
+
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
 type Config struct {
-	Fingerprint []byte
+	Fingerprint  []byte
 	MetricConfig *pb.ConfigResponse_MetricConfig
 	TraceConfig  *pb.ConfigResponse_TraceConfig
 }
