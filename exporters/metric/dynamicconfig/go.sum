@@ -693,6 +693,7 @@ github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1Cpa
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.8.1/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
 github.com/onsi/gomega v1.9.0/go.mod h1:Ho0h+IUsWyvy1OpqCwxlQ/21gkhVunqlU8fDGcoTdcA=
+github.com/open-telemetry/opentelemetry-collector v0.3.0 h1:/i106g9t6xNQ4hOAuczEwW10UX+S8ZnkdWDGawo9fyg=
 github.com/open-telemetry/opentelemetry-collector v0.3.0/go.mod h1:c5EgyLBK6FoGCaJpOEQ0j+sHqmfuoRzOm29tdVA/wDg=
 github.com/open-telemetry/opentelemetry-go v0.3.0/go.mod h1:OgNpQOjrlt33Ew6Ds0mGjmcTQg/rhUctsbkRdk/g1fw=
 github.com/open-telemetry/opentelemetry-go v0.6.0 h1:88RZ6458KADdJx+431VvEq3TSdfCao9qliQwPKk9G/Q=

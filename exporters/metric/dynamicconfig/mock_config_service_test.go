@@ -24,7 +24,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 
 	"go.opentelemetry.io/otel/api/kv"
 	"go.opentelemetry.io/otel/sdk/resource"

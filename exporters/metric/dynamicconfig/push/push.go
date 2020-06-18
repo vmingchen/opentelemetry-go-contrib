@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package push // import "go.opentelemetry.io/contrib/instrumentation/dynamicconfig/push"
+package push // import "go.opentelemetry.io/contrib/exporters/metric/dynamicconfig/push"
 
 import (
 	"context"
 	"sync"
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/metric"

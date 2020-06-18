@@ -24,8 +24,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig/push"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig/push"
 
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"

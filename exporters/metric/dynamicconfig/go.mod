@@ -1,8 +1,8 @@
-module go.opentelemetry.io/contrib/instrumentation/dynamicconfig
+module go.opentelemetry.io/contrib/exporters/metric/dynamicconfig
 
 go 1.14
 
-replace go.opentelemetry.io/contrib => ../..
+replace go.opentelemetry.io/contrib => ../../..
 
 replace go.opentelemetry.io/otel => github.com/open-telemetry/opentelemetry-go v0.6.1-0.20200617164307-c36fcd2dc437
 

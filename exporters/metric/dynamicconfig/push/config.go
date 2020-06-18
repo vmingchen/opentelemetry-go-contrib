@@ -17,7 +17,7 @@ package push
 import (
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 
 	"go.opentelemetry.io/otel/sdk/resource"
 )

@@ -19,8 +19,8 @@ import (
 	"log"
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig/push"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig/push"
 
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/kv"
@@ -42,7 +42,7 @@ func initProvider() (*otlp.Exporter, *push.Controller) {
 
 	notifier, _ := dynamicconfig.NewNotifier(
 		10*time.Second,
-		dynamicconfig.GetDefaultConfig(2, []byte{'f', 'o', 'o'}),
+		dynamicconfig.GetDefaultConfig(10, []byte{'f', 'o', 'o'}),
 		dynamicconfig.WithConfigHost("localhost:7777"),
 		dynamicconfig.WithResource(resource),
 	)

@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 
 	controllerTest "go.opentelemetry.io/otel/sdk/metric/controller/test"
 )

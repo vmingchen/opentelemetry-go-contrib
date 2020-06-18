@@ -22,7 +22,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"go.opentelemetry.io/contrib/instrumentation/dynamicconfig"
+	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 	
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
@@ -38,6 +38,7 @@ type server struct {
 
 // GetConfig implemented DynamicConfigServer
 func (s *server) GetConfig(ctx context.Context, in *pb.ConfigRequest) (*pb.ConfigResponse, error) {
+	log.Printf("Config being read\n")
 	return &pb.ConfigResponse{
 		MetricConfig: dynamicconfig.GetDefaultConfig(1, []byte{'b', 'a', 'r'}).MetricConfig,
 	}, nil
