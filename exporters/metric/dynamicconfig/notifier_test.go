@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
@@ -55,12 +56,13 @@ func (w *testWatcher) getTestVar() int {
 	return w.testVar
 }
 
-func newExampleNotifier() *dynamicconfig.Notifier {
-	notifier, _ := dynamicconfig.NewNotifier(
+func newExampleNotifier(t *testing.T) *dynamicconfig.Notifier {
+	notifier, err := dynamicconfig.NewNotifier(
 		dynamicconfig.GetDefaultConfig(30, []byte{'b', 'a', 'r'}),
 		dynamicconfig.WithConfigHost(CONFIG_SERVICE_ADDRESS),
 		dynamicconfig.WithResource(mockResource("notifiertest")),
 	)
+	assert.NoError(t, err)
 
 	return notifier
 }
@@ -78,7 +80,7 @@ func TestDynamicNotifier(t *testing.T) {
 		dynamicconfig.GetDefaultConfig(60, DEFAULT_FINGERPRINT),
 	)
 
-	notifier := newExampleNotifier()
+	notifier := newExampleNotifier(t)
 	require.Equal(t, watcher.getTestVar(), 0)
 
 	notifier.SetClock(mock)
@@ -101,9 +103,10 @@ func TestNonDynamicNotifier(t *testing.T) {
 		testVar: 0,
 	}
 	mock := controllerTest.NewMockClock()
-	notifier, _ := dynamicconfig.NewNotifier(
+	notifier, err := dynamicconfig.NewNotifier(
 		dynamicconfig.GetDefaultConfig(60, DEFAULT_FINGERPRINT),
 	)
+	assert.NoError(t, err)
 	require.Equal(t, watcher.getTestVar(), 0)
 
 	notifier.SetClock(mock)
@@ -124,7 +127,7 @@ func TestDoubleStop(t *testing.T) {
 		CONFIG_SERVICE_ADDRESS,
 		dynamicconfig.GetDefaultConfig(60, DEFAULT_FINGERPRINT),
 	)
-	notifier := newExampleNotifier()
+	notifier := newExampleNotifier(t)
 	notifier.Start()
 	notifier.Stop()
 	notifier.Stop()
@@ -137,7 +140,7 @@ func TestPushDoubleStart(t *testing.T) {
 		CONFIG_SERVICE_ADDRESS,
 		dynamicconfig.GetDefaultConfig(60, DEFAULT_FINGERPRINT),
 	)
-	notifier := newExampleNotifier()
+	notifier := newExampleNotifier(t)
 	notifier.Start()
 	notifier.Start()
 	notifier.Stop()

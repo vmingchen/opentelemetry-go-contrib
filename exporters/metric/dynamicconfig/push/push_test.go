@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
@@ -88,9 +89,10 @@ func newFixture(t *testing.T) testFixture {
 	exporter := &testExporter{
 		t: t,
 	}
-	notifier, _ := dynamicconfig.NewNotifier(
+	notifier, err := dynamicconfig.NewNotifier(
 		dynamicconfig.GetDefaultConfig(1, []byte{'f', 'o', 'o'}),
 	)
+	assert.NoError(t, err)
 	return testFixture{
 		checkpointSet: checkpointSet,
 		exporter:      exporter,

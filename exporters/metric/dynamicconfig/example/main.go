@@ -40,12 +40,13 @@ func initProvider() (*otlp.Exporter, *push.Controller) {
 
 	resource := resource.New(kv.String("R", "V"))
 
-	notifier, _ := dynamicconfig.NewNotifier(
+	notifier, err := dynamicconfig.NewNotifier(
 		dynamicconfig.GetDefaultConfig(10, []byte{'f', 'o', 'o'}),
 		dynamicconfig.WithCheckFrequency(10 * time.Second),
 		dynamicconfig.WithConfigHost("localhost:7777"),
 		dynamicconfig.WithResource(resource),
 	)
+	handleErr(err, "Failed to create notifier: $v")
 	notifier.Start()
 
 	pusher := push.New(
