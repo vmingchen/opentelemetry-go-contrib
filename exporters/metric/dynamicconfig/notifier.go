@@ -26,6 +26,9 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
+// DefaultCheckFrequency is the default frequency at which we check for new configs.
+const DefaultCheckFrequency = time.Minute
+
 type Watcher interface {
 	// NOTE: A lock will be held during the execution of both these functions.
 	// Please ensure their implementation is not too slow so as to avoid lock-
@@ -82,10 +85,10 @@ type Notifier struct {
 }
 
 // Constructor for a Notifier
-func NewNotifier(checkFrequency time.Duration, defaultConfig *Config, opts ...Option) (*Notifier, error) {
+func NewNotifier(defaultConfig *Config, opts ...Option) (*Notifier, error) {
 	notifier := &Notifier{
 		ch:             make(chan struct{}),
-		checkFrequency: checkFrequency,
+		checkFrequency: DefaultCheckFrequency,
 		clock:          controllerTime.RealClock{},
 		config:         defaultConfig,
 		subscribed:     make(map[Watcher]bool),

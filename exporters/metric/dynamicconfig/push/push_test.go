@@ -89,7 +89,6 @@ func newFixture(t *testing.T) testFixture {
 		t: t,
 	}
 	notifier, _ := dynamicconfig.NewNotifier(
-		time.Second,
 		dynamicconfig.GetDefaultConfig(1, []byte{'f', 'o', 'o'}),
 	)
 	return testFixture{

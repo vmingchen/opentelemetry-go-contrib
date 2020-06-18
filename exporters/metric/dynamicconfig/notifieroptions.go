@@ -14,12 +14,27 @@
 
 package dynamicconfig
 
-import "go.opentelemetry.io/otel/sdk/resource"
+import (
+	"time"
+
+	"go.opentelemetry.io/otel/sdk/resource"
+)
 
 // Option is the interface that applies the value to a configuration option.
 type Option interface {
 	// Apply sets the Option value of a Config.
 	Apply(*Notifier)
+}
+
+// WithCheckFrequency sets the checkFrequency configuration option of a Notifier.
+func WithCheckFrequency(checkFrequency time.Duration) Option {
+	return checkFrequencyOption(checkFrequency)
+}
+
+type checkFrequencyOption time.Duration
+
+func (o checkFrequencyOption) Apply(notifier *Notifier) {
+	notifier.checkFrequency = time.Duration(o)
 }
 
 // WithConfigHost sets the configHost configuration option of a Notifier.

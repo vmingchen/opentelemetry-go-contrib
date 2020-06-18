@@ -57,7 +57,6 @@ func (w *testWatcher) getTestVar() int {
 
 func newExampleNotifier() *dynamicconfig.Notifier {
 	notifier, _ := dynamicconfig.NewNotifier(
-		30 * time.Second,
 		dynamicconfig.GetDefaultConfig(30, []byte{'b', 'a', 'r'}),
 		dynamicconfig.WithConfigHost(CONFIG_SERVICE_ADDRESS),
 		dynamicconfig.WithResource(mockResource("notifiertest")),
@@ -88,7 +87,7 @@ func TestDynamicNotifier(t *testing.T) {
 	notifier.Register(&watcher)
 	require.Equal(t, watcher.getTestVar(), 1)
 
-	mock.Add(time.Minute)
+	mock.Add(2 * time.Minute)
 
 	require.Equal(t, watcher.getTestVar(), 2)
 
@@ -103,7 +102,6 @@ func TestNonDynamicNotifier(t *testing.T) {
 	}
 	mock := controllerTest.NewMockClock()
 	notifier, _ := dynamicconfig.NewNotifier(
-		time.Minute,
 		dynamicconfig.GetDefaultConfig(60, DEFAULT_FINGERPRINT),
 	)
 	require.Equal(t, watcher.getTestVar(), 0)
