@@ -38,6 +38,7 @@ type mockServer struct {
 // GetConfig implemented DynamicConfigServer
 func (s *mockServer) GetConfig(ctx context.Context, in *pb.ConfigRequest) (*pb.ConfigResponse, error) {
 	config := &pb.ConfigResponse{
+		Fingerprint:  s.config.Fingerprint,
 		MetricConfig: s.config.MetricConfig,
 		TraceConfig:  s.config.TraceConfig,
 	}

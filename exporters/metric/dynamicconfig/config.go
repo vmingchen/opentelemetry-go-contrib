@@ -16,29 +16,43 @@ package dynamicconfig
 
 import (
 	"bytes"
+	"errors"
 
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
 )
 
+// A configuration used in the SDK to dynamically change metric collection and tracing.
 type Config struct {
-	Fingerprint  []byte
-	MetricConfig *pb.ConfigResponse_MetricConfig
-	TraceConfig  *pb.ConfigResponse_TraceConfig
+	pb.ConfigResponse
 }
 
-// TODO: Either get rid of this or replace later
-// This is for convenient development/testing purposes
+// TODO: Either get rid of this or replace later.
+// This is for convenient development/testing purposes.
 func GetDefaultConfig(period pb.ConfigResponse_MetricConfig_Schedule_CollectionPeriod, fingerprint []byte) *Config {
 	schedule := pb.ConfigResponse_MetricConfig_Schedule{Period: period}
 
 	return &Config{
-		Fingerprint: fingerprint,
-		MetricConfig: &pb.ConfigResponse_MetricConfig{
-			Schedules: []*pb.ConfigResponse_MetricConfig_Schedule{&schedule},
+		pb.ConfigResponse{
+			Fingerprint: fingerprint,
+			MetricConfig: &pb.ConfigResponse_MetricConfig{
+				Schedules: []*pb.ConfigResponse_MetricConfig_Schedule{&schedule},
+			},
 		},
 	}
 }
 
 func (config *Config) Equals(otherConfig *Config) bool {
 	return bytes.Equal(config.Fingerprint, otherConfig.Fingerprint)
+}
+
+func (config *Config) Validate() error {
+	if len(config.MetricConfig.Schedules) != 1 {
+		return errors.New("Config must have exactly one Schedule")
+	}
+
+	if config.MetricConfig.Schedules[0].Period <= 0 {
+		return errors.New("Period must be positive")
+	}
+
+	return nil
 }

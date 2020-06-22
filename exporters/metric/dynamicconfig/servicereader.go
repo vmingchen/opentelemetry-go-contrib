@@ -18,48 +18,58 @@ import (
 	"context"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
+	"github.com/benbjohnson/clock"
 	resourcepb "github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1"
 	pb "github.com/vmingchen/opentelemetry-proto/gen/go/collector/dynamicconfig/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
+// A ServiceReader periodically reads from a remote configuration service to get configs that apply
+// to the SDK.
 type ServiceReader struct {
+	// Used for testing purposes.
+	clock clock.Clock
+
 	// Required
 	configHost string
 
-	// Timestamp of last time config service was checked
+	// Timestamp of last time config service was checked.
 	lastTimestamp time.Time
 
-	// Most recent config version
+	// Most recent config version.
 	lastKnownFingerprint []byte
 
-	// Suggested time to wait before checking config service again (seconds)
+	// Suggested time to wait before checking config service again (seconds).
 	suggestedWaitTimeSec int32
 
-	// Required. Label to identify this instance
+	// Required. Label to identify this instance.
 	resource *resourcepb.Resource
 }
 
-func newServiceReader(configHost string, resource *resourcepb.Resource) *ServiceReader {
+func NewServiceReader(configHost string, resource *resourcepb.Resource) *ServiceReader {
 	return &ServiceReader{
+		clock:      clock.New(),
 		configHost: configHost,
 		resource:   resource,
 	}
 }
 
-// Reads from a config service
-func (r *ServiceReader) readConfig() (*Config, error) {
-	// Wait for the suggestedWaitTimeSec
+// Reads from a config service. ReadConfig() will cause thread to sleep until
+// suggestedWaitTimeSec.
+func (r *ServiceReader) ReadConfig() (*Config, error) {
+	// Wait for the suggestedWaitTimeSec.
 	if !r.lastTimestamp.IsZero() && r.suggestedWaitTimeSec != 0 {
+		// This is the suggested earliest time we should read from the config service
+		// again.
 		suggestedReadTime := r.lastTimestamp.Add(time.Duration(r.suggestedWaitTimeSec) * time.Second)
-		time.Sleep(suggestedReadTime.Sub(time.Now()))
+		// We sleep if we haven't reached suggestedReadTime yet.
+		time.Sleep(suggestedReadTime.Sub(r.clock.Now()))
 
 		r.suggestedWaitTimeSec = 0
 	}
 
-	// Get the new config
+	// Get the new config.
 	conn, err := grpc.Dial(r.configHost, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
@@ -73,7 +83,7 @@ func (r *ServiceReader) readConfig() (*Config, error) {
 		Resource:             r.resource,
 	}
 
-	md := metadata.Pairs("timestamp", time.Now().Format(time.StampNano))
+	md := metadata.Pairs("timestamp", r.clock.Now().Format(time.StampNano))
 	ctx := metadata.NewOutgoingContext(context.Background(), md)
 
 	response, err := c.GetConfig(ctx, request)
@@ -82,14 +92,21 @@ func (r *ServiceReader) readConfig() (*Config, error) {
 	}
 
 	r.lastKnownFingerprint = response.Fingerprint
-	r.lastTimestamp = time.Now()
+	r.lastTimestamp = r.clock.Now()
 	r.suggestedWaitTimeSec = response.SuggestedWaitTimeSec
 
 	newConfig := Config{
-		Fingerprint:  response.Fingerprint,
-		MetricConfig: response.MetricConfig,
-		TraceConfig:  response.TraceConfig,
+		pb.ConfigResponse{
+			Fingerprint:  response.Fingerprint,
+			MetricConfig: response.MetricConfig,
+			TraceConfig:  response.TraceConfig,
+		},
 	}
 
 	return &newConfig, nil
+}
+
+// setClock supports setting a mock clock for testing.
+func (r *ServiceReader) SetClock(clock clock.Clock) {
+	r.clock = clock
 }

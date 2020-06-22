@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"go.opentelemetry.io/contrib/internal/transform"
-
 	controllerTime "go.opentelemetry.io/otel/sdk/metric/controller/time"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
@@ -164,7 +163,7 @@ func (n *Notifier) Unregister(watcher Watcher) {
 }
 
 func (n *Notifier) checkChanges(ch chan struct{}) {
-	serviceReader := newServiceReader(n.configHost, transform.Resource(n.resource))
+	serviceReader := NewServiceReader(n.configHost, transform.Resource(n.resource))
 
 	for {
 		select {
@@ -172,7 +171,7 @@ func (n *Notifier) checkChanges(ch chan struct{}) {
 			n.wg.Done()
 			return
 		case <-n.ticker.C():
-			newConfig, err := serviceReader.readConfig()
+			newConfig, err := serviceReader.ReadConfig()
 			if err != nil {
 				log.Printf("Failed to read from config service: %v\n", err)
 				break

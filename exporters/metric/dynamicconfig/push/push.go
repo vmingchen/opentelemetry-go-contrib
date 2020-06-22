@@ -16,8 +16,11 @@ package push // import "go.opentelemetry.io/contrib/exporters/metric/dynamicconf
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 
@@ -138,17 +141,23 @@ func (c *Controller) Stop() {
 
 // We assume that the only metric schedule is one with an inclusion pattern
 // that includes all metrics
-// TODO: Change later to support metric schedules
 func (c *Controller) OnInitialConfig(config *dynamicconfig.Config) {
-	if len(config.MetricConfig.Schedules) > 0 {
-		c.period = time.Duration(config.MetricConfig.Schedules[0].Period) * time.Second
+	err := config.Validate()
+	if err != nil {
+		log.Printf("Config is invalid: %v\n", err)
 	}
+
+	c.period = time.Duration(config.MetricConfig.Schedules[0].Period) * time.Second
 }
 
-// TODO: Change later to support metric schedules
 func (c *Controller) OnUpdatedConfig(config *dynamicconfig.Config) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
+	err := config.Validate()
+	if err != nil {
+		log.Printf("Config is invalid: %v\n", err)
+	}
 
 	// Stop the existing ticker
 	// Make a new ticker with the new sampling period
