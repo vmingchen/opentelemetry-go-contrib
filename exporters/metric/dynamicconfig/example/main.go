@@ -68,9 +68,13 @@ func main() {
 
 	meter := pusher.Provider().Meter("test-meter")
 	labels := []kv.KeyValue{kv.Bool("test", true)}
-	ctx := context.Background()
 
-	metric.Must(meter).NewInt64ValueRecorder("test-int64-valuerecorder").Record(ctx, 1, labels...)
+	oneMetricCB := func(_ context.Context, result metric.Float64ObserverResult) {
+		result.Observe(1, labels...)
+	}
+	_ = metric.Must(meter).NewFloat64ValueObserver("Observer", oneMetricCB,
+		metric.WithDescription("A ValueObserver"),
+	)
 
 	time.Sleep(5 * time.Minute)
 }

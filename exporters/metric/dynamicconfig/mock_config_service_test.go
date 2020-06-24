@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dynamicconfig_test
+package dynamicconfig
 
 import (
 	"context"
@@ -24,15 +24,13 @@ import (
 
 	"google.golang.org/grpc"
 
-	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
-
 	"go.opentelemetry.io/otel/api/kv"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
 type mockServer struct {
 	pb.UnimplementedDynamicConfigServer
-	config *dynamicconfig.Config
+	config *Config
 }
 
 // GetConfig implemented DynamicConfigServer
@@ -47,7 +45,7 @@ func (s *mockServer) GetConfig(ctx context.Context, in *pb.ConfigRequest) (*pb.C
 
 // This function runs a mock config service at an address, serving a defined config.
 // It returns a callback that stops the service.
-func runMockConfigService(t *testing.T, addr string, config *dynamicconfig.Config) func() {
+func RunMockConfigService(t *testing.T, addr string, config *Config) func() {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		t.Fatalf("Failed to get an address: %v", err)
@@ -66,6 +64,6 @@ func runMockConfigService(t *testing.T, addr string, config *dynamicconfig.Confi
 	}
 }
 
-func mockResource(serviceName string) *resource.Resource {
+func MockResource(serviceName string) *resource.Resource {
 	return resource.New(kv.Key(conventions.AttributeServiceName).String(serviceName))
 }

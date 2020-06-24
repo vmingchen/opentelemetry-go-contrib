@@ -16,11 +16,8 @@ package push // import "go.opentelemetry.io/contrib/exporters/metric/dynamicconf
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 
 	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 
@@ -30,7 +27,7 @@ import (
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	sdk "go.opentelemetry.io/otel/sdk/metric"
 	controllerTime "go.opentelemetry.io/otel/sdk/metric/controller/time"
-	"go.opentelemetry.io/otel/sdk/metric/integrator/simple"
+	"go.opentelemetry.io/otel/sdk/metric/processor/basic"
 )
 
 // DefaultPushPeriod is the default time interval between pushes.
@@ -41,7 +38,7 @@ type Controller struct {
 	lock        sync.Mutex
 	accumulator *sdk.Accumulator
 	provider    *registry.Provider
-	integrator  *simple.Integrator
+	processor   *basic.Processor
 	exporter    export.Exporter
 	wg          sync.WaitGroup
 	ch          chan bool
@@ -55,7 +52,7 @@ type Controller struct {
 // New constructs a Controller, an implementation of metric.Provider,
 // using the provided exporter and options to configure an SDK with
 // periodic collection.
-func New(selector export.AggregationSelector, exporter export.Exporter, opts ...Option) *Controller {
+func New(selector export.AggregatorSelector, exporter export.Exporter, opts ...Option) *Controller {
 	c := &Config{
 		Period: DefaultPushPeriod,
 	}
@@ -66,15 +63,15 @@ func New(selector export.AggregationSelector, exporter export.Exporter, opts ...
 		c.Timeout = c.Period
 	}
 
-	integrator := simple.New(selector, c.Stateful)
+	processor := basic.New(selector, exporter)
 	impl := sdk.NewAccumulator(
-		integrator,
+		processor,
 		sdk.WithResource(c.Resource),
 	)
 	return &Controller{
 		provider:    registry.NewProvider(impl),
 		accumulator: impl,
-		integrator:  integrator,
+		processor:   processor,
 		exporter:    exporter,
 		ch:          make(chan bool),
 		period:      c.Period,
@@ -141,22 +138,24 @@ func (c *Controller) Stop() {
 
 // We assume that the only metric schedule is one with an inclusion pattern
 // that includes all metrics
-func (c *Controller) OnInitialConfig(config *dynamicconfig.Config) {
+func (c *Controller) OnInitialConfig(config *dynamicconfig.Config) error {
 	err := config.Validate()
 	if err != nil {
-		log.Printf("Config is invalid: %v\n", err)
+		return err
 	}
 
 	c.period = time.Duration(config.MetricConfig.Schedules[0].Period) * time.Second
+
+	return nil
 }
 
-func (c *Controller) OnUpdatedConfig(config *dynamicconfig.Config) {
+func (c *Controller) OnUpdatedConfig(config *dynamicconfig.Config) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	err := config.Validate()
 	if err != nil {
-		log.Printf("Config is invalid: %v\n", err)
+		return err
 	}
 
 	// Stop the existing ticker
@@ -169,6 +168,8 @@ func (c *Controller) OnUpdatedConfig(config *dynamicconfig.Config) {
 
 	// Let the controller know to check the new ticker
 	c.ch <- true
+
+	return nil
 }
 
 func (c *Controller) run(ch chan bool) {
@@ -192,15 +193,16 @@ func (c *Controller) tick() {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
-	c.integrator.Lock()
-	defer c.integrator.Unlock()
+	c.processor.Lock()
+	defer c.processor.Unlock()
 
+	c.processor.StartCollection()
 	c.accumulator.Collect(ctx)
+	if err := c.processor.FinishCollection(); err != nil {
+		global.Handle(err)
+	}
 
-	err := c.exporter.Export(ctx, c.integrator.CheckpointSet())
-	c.integrator.FinishedCollection()
-
-	if err != nil {
+	if err := c.exporter.Export(ctx, c.processor.CheckpointSet()); err != nil {
 		global.Handle(err)
 	}
 }

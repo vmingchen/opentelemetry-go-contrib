@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dynamicconfig_test
+package dynamicconfig
 
 import (
-	"sync"
 	"testing"
 	"time"
 
@@ -23,67 +22,49 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"go.opentelemetry.io/contrib/exporters/metric/dynamicconfig"
 	"go.opentelemetry.io/contrib/internal/transform"
 )
 
-// Wrapper used to verify we wait suggestedWaitTimeSec until we read
-// from ServiceReader again.
-type serviceReaderWrapper struct {
-	reader *dynamicconfig.ServiceReader
-	// Mutex for testVar.
-	testLock sync.Mutex
-	// testVar is used to test how long ServiceReader.ReadConfig()
-	// is running.
-	testVar int
-}
+const TestAddress string = "localhost:50420"
 
-func (r *serviceReaderWrapper) asyncReadConfig(t *testing.T) {
-	r.testLock.Lock()
-	r.testVar = 1
-	r.testLock.Unlock()
-
-	_, err := r.reader.ReadConfig()
-	assert.NoError(t, err)
-
-	r.testLock.Lock()
-	r.testVar = 0
-	r.testLock.Unlock()
-}
-
-func (r *serviceReaderWrapper) getTestVar() int {
-	r.testLock.Lock()
-	defer r.testLock.Unlock()
-	return r.testVar
-}
+var TestFingerprint = []byte{'f', 'o', 'o'}
 
 func TestReadConfig(t *testing.T) {
-	clock := clock.NewMock()
-
 	// Mock config service returns config with a suggested wait time of 5 minutes.
-	config := dynamicconfig.GetDefaultConfig(60, DefaultFingerprint)
+	config := GetDefaultConfig(60, TestFingerprint)
 	config.SuggestedWaitTimeSec = 300
-	stopFunc := runMockConfigService(t, ConfigServiceAddress, config)
+	stopFunc := RunMockConfigService(t, TestAddress, config)
 
-	reader := dynamicconfig.NewServiceReader(
-		ConfigServiceAddress,
-		transform.Resource(mockResource("servicereadertest")),
+	reader := NewServiceReader(
+		TestAddress,
+		transform.Resource(MockResource("servicereadertest")),
 	)
-	reader.SetClock(clock)
-	wrapper := serviceReaderWrapper{
-		reader: reader,
-	}
 
-	// Sets ServiceReader.suggestedWaitTimeSec to 300 (5 minutes).
-	_, err := reader.ReadConfig()
+	response, err := reader.readConfig()
 	assert.NoError(t, err)
 
-	// Test that ServiceReader.ReadConfig() waits 5 minutes to read.
-	go wrapper.asyncReadConfig(t)
-	clock.Add(time.Minute)
-	require.Equal(t, wrapper.getTestVar(), 1)
-	clock.Add(4 * time.Minute)
-	require.Equal(t, wrapper.getTestVar(), 0)
-
 	stopFunc()
+
+	require.Equal(t, response.Fingerprint, config.Fingerprint)
+}
+
+func TestSuggestedWaitTime(t *testing.T) {
+	clock := clock.NewMock()
+
+	// ServiceReader with suggestedWaitTimeSec of 5 minutes.
+	reader := ServiceReader{
+		clock: clock,
+		lastTimestamp: clock.Now(),
+		suggestedWaitTimeSec: 5 * 60,
+	}
+
+	require.Equal(t, reader.suggestedWaitTime(), 5 * time.Minute)
+
+	clock.Add(5 * time.Minute)
+
+	require.Equal(t, reader.suggestedWaitTime(), time.Duration(0))
+
+	clock.Add(5 * time.Minute)
+
+	require.Equal(t, reader.suggestedWaitTime(), time.Duration(0))
 }

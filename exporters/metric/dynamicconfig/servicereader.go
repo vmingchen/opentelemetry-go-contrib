@@ -40,7 +40,8 @@ type ServiceReader struct {
 	// Most recent config version.
 	lastKnownFingerprint []byte
 
-	// Suggested time to wait before checking config service again (seconds).
+	// Suggested time from reading from the config service to wait before checking
+	// config service again (seconds).
 	suggestedWaitTimeSec int32
 
 	// Required. Label to identify this instance.
@@ -55,19 +56,14 @@ func NewServiceReader(configHost string, resource *resourcepb.Resource) *Service
 	}
 }
 
-// Reads from a config service. ReadConfig() will cause thread to sleep until
+// Reads from a config service. readConfig() will cause thread to sleep until
 // suggestedWaitTimeSec.
-func (r *ServiceReader) ReadConfig() (*Config, error) {
-	// Wait for the suggestedWaitTimeSec.
-	if !r.lastTimestamp.IsZero() && r.suggestedWaitTimeSec != 0 {
-		// This is the suggested earliest time we should read from the config service
-		// again.
-		suggestedReadTime := r.lastTimestamp.Add(time.Duration(r.suggestedWaitTimeSec) * time.Second)
-		// We sleep if we haven't reached suggestedReadTime yet.
-		time.Sleep(suggestedReadTime.Sub(r.clock.Now()))
-
-		r.suggestedWaitTimeSec = 0
-	}
+func (r *ServiceReader) readConfig() (*Config, error) {
+	// suggstedWaitTime is how much longer to wait before reaching the full
+	// ServiceReader.suggestedWaitTimeSec.
+	suggestedWaitTime := r.suggestedWaitTime()
+	time.Sleep(suggestedWaitTime)
+	r.suggestedWaitTimeSec = 0
 
 	// Get the new config.
 	conn, err := grpc.Dial(r.configHost, grpc.WithInsecure(), grpc.WithBlock())
@@ -106,7 +102,20 @@ func (r *ServiceReader) ReadConfig() (*Config, error) {
 	return &newConfig, nil
 }
 
-// setClock supports setting a mock clock for testing.
-func (r *ServiceReader) SetClock(clock clock.Clock) {
-	r.clock = clock
+// Returns how much longer we need to wait to reach the full suggestedWaitTimeSec.
+func (r *ServiceReader) suggestedWaitTime() time.Duration {
+	if r.lastTimestamp.IsZero() || r.suggestedWaitTimeSec == 0 {
+		return 0
+	}
+
+	// This is the suggested earliest time we should read from the config service again.
+	suggestedReadTime := r.lastTimestamp.Add(time.Duration(r.suggestedWaitTimeSec) * time.Second)
+
+	suggestedWaitTime := suggestedReadTime.Sub(r.clock.Now())
+	if suggestedWaitTime < 0 {
+		suggestedWaitTime = 0
+	}
+
+	// Return the time needed to wait to reach suggestedReadTime.
+	return suggestedWaitTime
 }

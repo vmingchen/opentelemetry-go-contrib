@@ -36,8 +36,8 @@ type Watcher interface {
 	// There is a common lock shared by both functions, ensuring there is no
 	// concurrent invocation of these two functions; therefore caller does not
 	// need a lock protecting access to members of MetricConfig.
-	OnInitialConfig(config *Config)
-	OnUpdatedConfig(config *Config)
+	OnInitialConfig(config *Config) error
+	OnUpdatedConfig(config *Config) error
 }
 
 // A Notifier monitors a config service for a config changing, then letting
@@ -150,9 +150,13 @@ func (n *Notifier) Stop() {
 
 func (n *Notifier) Register(watcher Watcher) {
 	n.lock.Lock()
-	defer n.lock.Unlock()
 	n.subscribed[watcher] = true
-	watcher.OnInitialConfig(n.config)
+	err := watcher.OnInitialConfig(n.config)
+	n.lock.Unlock()
+
+	if err != nil {
+		log.Printf("Failed to apply config: %v\n", err)
+	}
 }
 
 func (n *Notifier) Unregister(watcher Watcher) {
@@ -171,7 +175,7 @@ func (n *Notifier) checkChanges(ch chan struct{}) {
 			n.wg.Done()
 			return
 		case <-n.ticker.C():
-			newConfig, err := serviceReader.ReadConfig()
+			newConfig, err := serviceReader.readConfig()
 			if err != nil {
 				log.Printf("Failed to read from config service: %v\n", err)
 				break
@@ -182,7 +186,11 @@ func (n *Notifier) checkChanges(ch chan struct{}) {
 				n.config = newConfig
 
 				for watcher := range n.subscribed {
-					watcher.OnUpdatedConfig(newConfig)
+					err = watcher.OnUpdatedConfig(newConfig)
+					if err != nil {
+						log.Printf("Failed to apply config: %v\n", err)
+						break
+					}
 				}
 			}
 			n.lock.Unlock()

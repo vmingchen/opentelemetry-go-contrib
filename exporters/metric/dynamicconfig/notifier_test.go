@@ -27,10 +27,6 @@ import (
 	controllerTest "go.opentelemetry.io/otel/sdk/metric/controller/test"
 )
 
-const ConfigServiceAddress string = "localhost:50420"
-
-var DefaultFingerprint = []byte{'f', 'o', 'o'}
-
 // testLock is to prevent race conditions in test code
 // testVar is used to verify OnInitialConfig and OnUpdatedConfig are called
 type testWatcher struct {
@@ -38,16 +34,18 @@ type testWatcher struct {
 	testVar  int
 }
 
-func (w *testWatcher) OnInitialConfig(config *dynamicconfig.Config) {
+func (w *testWatcher) OnInitialConfig(config *dynamicconfig.Config) error {
 	w.testLock.Lock()
 	defer w.testLock.Unlock()
 	w.testVar = 1
+	return nil
 }
 
-func (w *testWatcher) OnUpdatedConfig(config *dynamicconfig.Config) {
+func (w *testWatcher) OnUpdatedConfig(config *dynamicconfig.Config) error {
 	w.testLock.Lock()
 	defer w.testLock.Unlock()
 	w.testVar = 2
+	return nil
 }
 
 // Use a getter to prevent race conditions around testVar
@@ -60,8 +58,8 @@ func (w *testWatcher) getTestVar() int {
 func newExampleNotifier(t *testing.T) *dynamicconfig.Notifier {
 	notifier, err := dynamicconfig.NewNotifier(
 		dynamicconfig.GetDefaultConfig(60, []byte{'b', 'a', 'r'}),
-		dynamicconfig.WithConfigHost(ConfigServiceAddress),
-		dynamicconfig.WithResource(mockResource("notifiertest")),
+		dynamicconfig.WithConfigHost(dynamicconfig.TestAddress),
+		dynamicconfig.WithResource(dynamicconfig.MockResource("notifiertest")),
 	)
 	assert.NoError(t, err)
 
@@ -75,10 +73,10 @@ func TestDynamicNotifier(t *testing.T) {
 	}
 	mock := controllerTest.NewMockClock()
 
-	stopFunc := runMockConfigService(
+	stopFunc := dynamicconfig.RunMockConfigService(
 		t,
-		ConfigServiceAddress,
-		dynamicconfig.GetDefaultConfig(60, DefaultFingerprint),
+		dynamicconfig.TestAddress,
+		dynamicconfig.GetDefaultConfig(60, dynamicconfig.TestFingerprint),
 	)
 
 	notifier := newExampleNotifier(t)
@@ -105,7 +103,7 @@ func TestNonDynamicNotifier(t *testing.T) {
 	}
 	mock := controllerTest.NewMockClock()
 	notifier, err := dynamicconfig.NewNotifier(
-		dynamicconfig.GetDefaultConfig(60, DefaultFingerprint),
+		dynamicconfig.GetDefaultConfig(60, dynamicconfig.TestFingerprint),
 	)
 	assert.NoError(t, err)
 	require.Equal(t, watcher.getTestVar(), 0)
@@ -123,10 +121,10 @@ func TestNonDynamicNotifier(t *testing.T) {
 }
 
 func TestDoubleStop(t *testing.T) {
-	stopFunc := runMockConfigService(
+	stopFunc := dynamicconfig.RunMockConfigService(
 		t,
-		ConfigServiceAddress,
-		dynamicconfig.GetDefaultConfig(60, DefaultFingerprint),
+		dynamicconfig.TestAddress,
+		dynamicconfig.GetDefaultConfig(60, dynamicconfig.TestFingerprint),
 	)
 	notifier := newExampleNotifier(t)
 	notifier.Start()
@@ -136,10 +134,10 @@ func TestDoubleStop(t *testing.T) {
 }
 
 func TestPushDoubleStart(t *testing.T) {
-	stopFunc := runMockConfigService(
+	stopFunc := dynamicconfig.RunMockConfigService(
 		t,
-		ConfigServiceAddress,
-		dynamicconfig.GetDefaultConfig(60, DefaultFingerprint),
+		dynamicconfig.TestAddress,
+		dynamicconfig.GetDefaultConfig(60, dynamicconfig.TestFingerprint),
 	)
 	notifier := newExampleNotifier(t)
 	notifier.Start()

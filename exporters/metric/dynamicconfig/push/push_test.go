@@ -36,8 +36,8 @@ import (
 	export "go.opentelemetry.io/otel/sdk/export/metric"
 	"go.opentelemetry.io/otel/sdk/export/metric/aggregation"
 	controllerTest "go.opentelemetry.io/otel/sdk/metric/controller/test"
-	"go.opentelemetry.io/otel/sdk/metric/integrator/test"
-	integratorTest "go.opentelemetry.io/otel/sdk/metric/integrator/test"
+	"go.opentelemetry.io/otel/sdk/metric/processor/test"
+	processorTest "go.opentelemetry.io/otel/sdk/metric/processor/test"
 	"go.opentelemetry.io/otel/sdk/resource"
 )
 
@@ -100,12 +100,16 @@ func newFixture(t *testing.T) testFixture {
 	}
 }
 
+func (e *testExporter) ExportKindFor(*metric.Descriptor, aggregation.Kind) export.ExportKind {
+	return export.PassThroughExporter
+}
+
 func (e *testExporter) Export(_ context.Context, checkpointSet export.CheckpointSet) error {
 	e.lock.Lock()
 	defer e.lock.Unlock()
 	e.exports++
 	var records []export.Record
-	if err := checkpointSet.ForEach(func(r export.Record) error {
+	if err := checkpointSet.ForEach(e, func(r export.Record) error {
 		if e.injectErr != nil {
 			if err := e.injectErr(r); err != nil {
 				return err
@@ -130,7 +134,7 @@ func (e *testExporter) resetRecords() ([]export.Record, int) {
 
 func TestPushDoubleStop(t *testing.T) {
 	fix := newFixture(t)
-	p := push.New(integratorTest.AggregationSelector(), fix.exporter)
+	p := push.New(processorTest.AggregatorSelector(), fix.exporter)
 	p.Start()
 	p.Stop()
 	p.Stop()
@@ -138,7 +142,7 @@ func TestPushDoubleStop(t *testing.T) {
 
 func TestPushDoubleStart(t *testing.T) {
 	fix := newFixture(t)
-	p := push.New(test.AggregationSelector(), fix.exporter)
+	p := push.New(test.AggregatorSelector(), fix.exporter)
 	p.Start()
 	p.Start()
 	p.Stop()
@@ -148,7 +152,7 @@ func TestPushTicker(t *testing.T) {
 	fix := newFixture(t)
 
 	p := push.New(
-		test.AggregationSelector(),
+		test.AggregatorSelector(),
 		fix.exporter,
 		push.WithPeriod(time.Second),
 		push.WithResource(testResource),
@@ -180,7 +184,7 @@ func TestPushTicker(t *testing.T) {
 	require.Equal(t, "counter.sum", records[0].Descriptor().Name())
 	require.Equal(t, "R=V", records[0].Resource().Encoded(label.DefaultEncoder()))
 
-	sum, err := records[0].Aggregator().(aggregation.Sum).Sum()
+	sum, err := records[0].Aggregation().(aggregation.Sum).Sum()
 	require.Equal(t, int64(3), sum.AsInt64())
 	require.Nil(t, err)
 
@@ -197,7 +201,7 @@ func TestPushTicker(t *testing.T) {
 	require.Equal(t, "counter.sum", records[0].Descriptor().Name())
 	require.Equal(t, "R=V", records[0].Resource().Encoded(label.DefaultEncoder()))
 
-	sum, err = records[0].Aggregator().(aggregation.Sum).Sum()
+	sum, err = records[0].Aggregation().(aggregation.Sum).Sum()
 	require.Equal(t, int64(7), sum.AsInt64())
 	require.Nil(t, err)
 
@@ -230,7 +234,7 @@ func TestPushExportError(t *testing.T) {
 			fix.exporter.injectErr = injector("counter1.sum", tt.injectedError)
 
 			p := push.New(
-				test.AggregationSelector(),
+				test.AggregatorSelector(),
 				fix.exporter,
 				push.WithPeriod(time.Second),
 				push.WithResource(testResource),

@@ -41,10 +41,6 @@ func GetDefaultConfig(period pb.ConfigResponse_MetricConfig_Schedule_CollectionP
 	}
 }
 
-func (config *Config) Equals(otherConfig *Config) bool {
-	return bytes.Equal(config.Fingerprint, otherConfig.Fingerprint)
-}
-
 func (config *Config) Validate() error {
 	if len(config.MetricConfig.Schedules) != 1 {
 		return errors.New("Config must have exactly one Schedule")
@@ -55,4 +51,8 @@ func (config *Config) Validate() error {
 	}
 
 	return nil
+}
+
+func (config *Config) Equals(otherConfig *Config) bool {
+	return bytes.Equal(config.Fingerprint, otherConfig.Fingerprint)
 }

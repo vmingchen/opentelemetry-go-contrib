@@ -3,10 +3,12 @@ module go.opentelemetry.io/contrib/exporters/metric/dynamicconfig/example
 go 1.13
 
 replace go.opentelemetry.io/contrib => ../../../..
-replace go.opentelemetry.io/contrib/exporters/metric/dynamicconfig => ../
-replace go.opentelemetry.io/otel => github.com/open-telemetry/opentelemetry-go v0.6.1-0.20200617164307-c36fcd2dc437
-replace go.opentelemetry.io/otel/exporters/otlp => github.com/open-telemetry/opentelemetry-go/exporters/otlp v0.6.1-0.20200617164307-c36fcd2dc437
 
+replace go.opentelemetry.io/contrib/exporters/metric/dynamicconfig => ../
+
+replace go.opentelemetry.io/otel => github.com/open-telemetry/opentelemetry-go v0.6.1-0.20200623190015-2966505271c3
+
+replace go.opentelemetry.io/otel/exporters/otlp => github.com/open-telemetry/opentelemetry-go/exporters/otlp v0.6.1-0.20200623190015-2966505271c3
 
 require (
 	github.com/open-telemetry/opentelemetry-proto v0.3.0 // indirect
