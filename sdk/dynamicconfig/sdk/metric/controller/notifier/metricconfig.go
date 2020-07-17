@@ -35,13 +35,13 @@ func GetDefaultConfig(period int32, fingerprint []byte) *MetricConfig {
 	}
 	schedule := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: []*pb.MetricConfigResponse_Schedule_Pattern{&pattern},
-		PeriodSec:            period,
+		PeriodSec:         period,
 	}
 
 	return &MetricConfig{
 		pb.MetricConfigResponse{
 			Fingerprint: fingerprint,
-			Schedules: []*pb.MetricConfigResponse_Schedule{&schedule},
+			Schedules:   []*pb.MetricConfigResponse_Schedule{&schedule},
 		},
 	}
 }

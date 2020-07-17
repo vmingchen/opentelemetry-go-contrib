@@ -82,7 +82,7 @@ func TestFindPeriodCached(t *testing.T) {
 
 	notMatchingSchedule := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: MatchingPatterns1,
-		PeriodSec:            5,
+		PeriodSec:         5,
 	}
 	ext.schedules = []*pb.MetricConfigResponse_Schedule{&notMatchingSchedule}
 
@@ -95,12 +95,12 @@ func TestFindPeriodMinimum(t *testing.T) {
 	matchingSchedule1 := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: MatchingPatterns1,
 		ExclusionPatterns: NotMatchingPatterns1,
-		PeriodSec:            5,
+		PeriodSec:         5,
 	}
 	matchingSchedule2 := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: MatchingPatterns2,
 		ExclusionPatterns: NotMatchingPatterns2,
-		PeriodSec:            1,
+		PeriodSec:         1,
 	}
 	ext.schedules = []*pb.MetricConfigResponse_Schedule{
 		&matchingSchedule1,
@@ -117,7 +117,7 @@ func TestFindPeriodExcluded(t *testing.T) {
 	matchingSchedule := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: MatchingPatterns1,
 		ExclusionPatterns: MatchingPatterns2,
-		PeriodSec:            5,
+		PeriodSec:         5,
 	}
 	ext.schedules = []*pb.MetricConfigResponse_Schedule{&matchingSchedule}
 
@@ -131,12 +131,12 @@ func TestFindPeriodRightMatch(t *testing.T) {
 	notMatchingSchedule := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: NotMatchingPatterns1,
 		ExclusionPatterns: MatchingPatterns1,
-		PeriodSec:            1,
+		PeriodSec:         1,
 	}
 	matchingSchedule := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: MatchingPatterns2,
 		ExclusionPatterns: NotMatchingPatterns2,
-		PeriodSec:            5,
+		PeriodSec:         5,
 	}
 	ext.schedules = []*pb.MetricConfigResponse_Schedule{
 		&notMatchingSchedule,

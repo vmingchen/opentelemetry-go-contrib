@@ -43,19 +43,19 @@ func (s *server) GetMetricConfig(ctx context.Context, in *pb.MetricConfigRequest
 	}
 	schedule1 := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: []*pb.MetricConfigResponse_Schedule_Pattern{&pattern1},
-		PeriodSec:            1,
+		PeriodSec:         1,
 	}
 	pattern2 := pb.MetricConfigResponse_Schedule_Pattern{
 		Match: &pb.MetricConfigResponse_Schedule_Pattern_Equals{Equals: "Two Metric"},
 	}
 	schedule2 := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: []*pb.MetricConfigResponse_Schedule_Pattern{&pattern2},
-		PeriodSec:            5,
+		PeriodSec:         5,
 	}
 
 	return &pb.MetricConfigResponse{
 		Fingerprint: []byte{'b', 'a', 'r'},
-		Schedules: []*pb.MetricConfigResponse_Schedule{&schedule1, &schedule2},
+		Schedules:   []*pb.MetricConfigResponse_Schedule{&schedule1, &schedule2},
 	}, nil
 }
 

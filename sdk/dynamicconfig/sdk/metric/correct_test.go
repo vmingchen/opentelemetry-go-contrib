@@ -594,7 +594,7 @@ func TestWithDynamicExtension(t *testing.T) {
 	// Create new dynamic extension with set of schedules
 	schedule := pb.MetricConfigResponse_Schedule{
 		InclusionPatterns: metricsdk.MatchingPatterns2,
-		PeriodSec:            5,
+		PeriodSec:         5,
 	}
 	ext := metricsdk.NewDynamicExtension()
 	ext.SetSchedules([]*pb.MetricConfigResponse_Schedule{&schedule})
