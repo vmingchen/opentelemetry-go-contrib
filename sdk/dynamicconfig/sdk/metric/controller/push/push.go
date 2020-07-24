@@ -257,8 +257,7 @@ func (c *Controller) tick() {
 		tolerance := c.period / time.Duration(10)
 
 		for period, lastCollect := range c.lastCollected {
-			expectedExportTime := lastCollect.Add(time.Duration(period) * time.Second)
-			expectedExportTimeWithTolerance := expectedExportTime.Add(-tolerance)
+			expectedExportTimeWithTolerance := lastCollect.Add(time.Duration(period) * time.Second - tolerance)
 
 			// Check if enough time elapsed since metrics with `period` were
 			// last exported, within the tolerance.
